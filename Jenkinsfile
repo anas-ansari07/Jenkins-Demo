@@ -6,6 +6,7 @@ pipeline {
         DOTNET_IMAGE = 'mcr.microsoft.com/dotnet/sdk:10.0'
         PROJECT_FILE = 'WebApiBasicsTut.csproj'
         JENKINS_VOLUME = 'jenkins_home_fresh'
+        NUGET_VOLUME = 'dotnet_nuget_cache'
     }
 
     stages {
@@ -24,6 +25,7 @@ pipeline {
                 sh '''
                     docker run --rm \
                       -v ${JENKINS_VOLUME}:/var/jenkins_home \
+                      -v ${NUGET_VOLUME}:/root/.nuget/packages \
                       -w "$WORKSPACE" \
                       ${DOTNET_IMAGE} \
                       dotnet restore ${PROJECT_FILE}
@@ -38,10 +40,12 @@ pipeline {
                 sh '''
                     docker run --rm \
                       -v ${JENKINS_VOLUME}:/var/jenkins_home \
+                      -v ${NUGET_VOLUME}:/root/.nuget/packages \
                       -w "$WORKSPACE" \
                       ${DOTNET_IMAGE} \
                       dotnet build ${PROJECT_FILE} \
-                      --configuration Release --no-restore
+                      --configuration Release \
+                      --no-restore
                 '''
             }
         }
@@ -53,6 +57,7 @@ pipeline {
                 sh '''
                     docker run --rm \
                       -v ${JENKINS_VOLUME}:/var/jenkins_home \
+                      -v ${NUGET_VOLUME}:/root/.nuget/packages \
                       -w "$WORKSPACE" \
                       ${DOTNET_IMAGE} \
                       dotnet test ${PROJECT_FILE} \
@@ -68,11 +73,13 @@ pipeline {
                 sh '''
                     docker run --rm \
                       -v ${JENKINS_VOLUME}:/var/jenkins_home \
+                      -v ${NUGET_VOLUME}:/root/.nuget/packages \
                       -w "$WORKSPACE" \
                       ${DOTNET_IMAGE} \
                       dotnet publish ${PROJECT_FILE} \
                       --configuration Release \
-                      --output ./publish
+                      --no-restore \
+                      --output "$WORKSPACE/publish"
                 '''
             }
         }
@@ -81,6 +88,7 @@ pipeline {
     post {
         success {
             echo 'SUCCESS: .NET API pipeline completed!'
+
             archiveArtifacts artifacts: 'publish/**',
                              allowEmptyArchive: false
         }
