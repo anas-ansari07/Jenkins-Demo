@@ -83,6 +83,37 @@ pipeline {
                 '''
             }
         }
+
+        
+            stage('Docker Build') {
+                steps {
+                    echo 'Building Docker image'
+
+                    sh '''
+                        docker build \
+                          -t webapi-basics:${BUILD_NUMBER} \
+                          -t webapi-basics:latest \
+                          "$WORKSPACE"
+                    '''
+                }
+            }
+
+            stage('Deploy') {
+                steps {
+                    echo 'Deploying API container'
+
+                    sh '''
+                        docker rm -f webapi-basics || true
+
+                        docker run -d \
+                          --name webapi-basics \
+                          --restart unless-stopped \
+                          -p 8081:8080 \
+                          webapi-basics:${BUILD_NUMBER}
+                    '''
+                }
+            }
+
     }
 
     post {
