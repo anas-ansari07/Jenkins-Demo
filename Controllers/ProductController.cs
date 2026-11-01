@@ -17,6 +17,14 @@ namespace WebApiBasicsTut.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Test()
+        {
+           
+            return Ok("Test Successful");
+           
+        }
+
         // GET: api/product
         [HttpGet]
         public async Task<IActionResult> GetAll()
